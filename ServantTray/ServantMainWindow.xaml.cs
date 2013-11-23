@@ -23,6 +23,27 @@ namespace ServantTray
         public MainWindow()
         {
             InitializeComponent();
+
+            this.TaskIcon.TrayContextMenuOpen += TaskIcon_TrayContextMenuOpen;
+
+            //hide Main Window
+            this.Visibility = System.Windows.Visibility.Hidden;
+        }
+
+        void TaskIcon_TrayContextMenuOpen(object sender, RoutedEventArgs e)
+        {
+            //hack: for enabling 'exit' menu item
+            this.TaskIcon.ContextMenu.Focus();
+        }
+
+        private void ExitCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+            e.Handled = true;
+        }
+        private void OnExit(object sender, ExecutedRoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
         }
     }
 }
