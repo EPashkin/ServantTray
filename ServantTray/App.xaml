@@ -1,0 +1,8 @@
+﻿<Application x:Class="ServantTray.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="ServantMainWindow.xaml">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>
