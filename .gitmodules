@@ -1,0 +1,4 @@
+[submodule "otp.net"]
+	path = otp.net
+	url = git@github.com:EPashkin/otp.net.git
+	branch = dev
