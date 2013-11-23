@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Otp;
+using Erlang = Otp.Erlang;
 
 namespace ServantTray
 {
@@ -98,18 +99,21 @@ Stop servantTray: global:send(servantTray, stop).
                     //WriteLine("<= [REPLY3]:" + (reply == null ? "null" : reply.ToString()));
                 }
 
+                Erlang.Object tupplePat = Erlang.Object.Format("{Pid, Mes}");
+                Erlang.Object stopPat = Erlang.Object.Format("stop");
+                Erlang.VarBind binding;
                 while (!Stopping)
                 {
                     Otp.Erlang.Object msg = mbox.receive();
-                    if (msg is Otp.Erlang.Tuple)
+                    if (tupplePat.match(msg, (binding = new Otp.Erlang.VarBind())))
                     {
-                        Otp.Erlang.Tuple m = msg as Otp.Erlang.Tuple;
-                        if (m.arity() == 2 && m.elementAt(0) is Otp.Erlang.Pid)
+                        var Pid = binding.find("Pid") as Erlang.Pid;
+                        if (Pid != null)
                         {
-                            mbox.send(m.elementAt(0) as Otp.Erlang.Pid, m.elementAt(1));
+                            mbox.send(Pid, binding.find("Mes"));
                         }
                     }
-                    else if (msg is Otp.Erlang.Atom && msg.ToString() == "stop")
+                    else if (stopPat.match(msg, (binding = new Otp.Erlang.VarBind())))
                     {
                         Stop();
                     }
