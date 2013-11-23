@@ -20,6 +20,8 @@ namespace ServantTray
     /// </summary>
     public partial class MainWindow : Window
     {
+        private OTP_worker OTP;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -28,6 +30,9 @@ namespace ServantTray
 
             //hide Main Window
             this.Visibility = System.Windows.Visibility.Hidden;
+
+            string target = "ketchup";
+            OTP = new OTP_worker(target);
         }
 
         void TaskIcon_TrayContextMenuOpen(object sender, RoutedEventArgs e)

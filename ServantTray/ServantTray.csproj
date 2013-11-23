@@ -66,6 +66,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CustomCommands.cs" />
+    <Compile Include="OTP_worker.cs" />
     <Compile Include="ServantMainWindow.xaml.cs">
       <DependentUpon>ServantMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -101,6 +102,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\Bulb.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\otp.net\Otp\Otp.csproj">
+      <Project>{9a16ceeb-fc26-4d35-8f9e-42da30212f69}</Project>
+      <Name>Otp</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
