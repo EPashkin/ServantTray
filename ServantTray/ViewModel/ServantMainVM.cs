@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using GalaSoft.MvvmLight;
@@ -32,6 +33,13 @@ namespace ServantTray.ViewModel
             ////{
             ////    // Code runs "for real"
             ////}
+            var aa = new string[] { "Test1", "Test2" };
+            TaskMenu.Add(null); //adding separator
+            foreach (string text in aa)
+            {
+                TaskMenu.Add(new TaskMenuItemVM(text));
+            }
+            TaskMenu.Add(null); //adding separator
         }
 
         public string ExitTitle
@@ -53,5 +61,27 @@ namespace ServantTray.ViewModel
             Application.Current.Shutdown();
         }
 
+        private ObservableCollection<TaskMenuItemVM> m_TaskMenu;
+        public ObservableCollection<TaskMenuItemVM> TaskMenu
+        {
+            get
+            {
+                return m_TaskMenu ?? (m_TaskMenu = new ObservableCollection<TaskMenuItemVM>());
+            }
+        }
+
+        private ICommand m_TaskCommand;
+        public ICommand TaskCommand
+        {
+            get
+            {
+                return m_TaskCommand ?? (m_TaskCommand = new RelayCommand<object>(OnTask));
+            }
+        }
+
+        private void OnTask(object parameter)
+        {
+            MessageBox.Show(parameter.ToString());
+        }
     }
 }

@@ -5,6 +5,10 @@
         xmlns:tb="http://www.hardcodet.net/taskbar"
         DataContext="{Binding Source={StaticResource Locator}, Path=ServantMain}"
         Title="Servant" Height="350" Width="525">
+    <Window.Resources>
+        <CollectionViewSource Source="{Binding TaskMenu}" x:Key="Task_Menu"/>
+        <local:DataTypeNameConverter x:Key="DataTypeNameConverter" />
+    </Window.Resources>
     <Grid>
         <tb:TaskbarIcon
             x:Name="TaskIcon"
@@ -12,10 +16,35 @@
             ToolTipText="Servant">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="First Menu Item" />
-                    <MenuItem Header="Second Menu Item" />
-                    <Separator/>
-                    <MenuItem Header="{Binding ExitTitle}" Command="{Binding ExitCommand}" />
+                    <ContextMenu.ItemsSource>
+                        <CompositeCollection>
+                            <MenuItem Header="First Menu Item" />
+                            <MenuItem Header="Second Menu Item" />
+                            <CollectionContainer Collection="{Binding Mode=OneWay, Source={StaticResource Task_Menu}}" />
+                            <MenuItem Header="{Binding ExitTitle}" Command="{Binding ExitCommand}" />
+                        </CompositeCollection>
+                    </ContextMenu.ItemsSource>
+                    <ContextMenu.Resources>
+                        <ControlTemplate x:Key="MenuSeparatorTemplate">
+                            <Separator />
+                        </ControlTemplate>
+                    </ContextMenu.Resources>
+                    <ContextMenu.ItemContainerStyle>
+                        <Style TargetType="{x:Type MenuItem}">
+                            <Style.Triggers>
+                                <!-- чтобы не портить статические меню -->
+                                <DataTrigger Binding="{Binding Converter={StaticResource DataTypeNameConverter}, Mode=OneWay}"
+                                         Value="TaskMenuItemVM">
+                                    <Setter Property="Header" Value="{Binding Title}" />
+                                    <Setter Property="Command" Value="{Binding DataContext.TaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}, AncestorLevel=1}}"/>
+                                    <Setter Property="CommandParameter" Value="{Binding Title}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                    <Setter Property="Template" Value="{StaticResource MenuSeparatorTemplate}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ContextMenu.ItemContainerStyle>
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>

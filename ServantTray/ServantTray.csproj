@@ -70,7 +70,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DataTypeNameConverter.cs" />
     <Compile Include="ViewModel\ServantMainVM.cs" />
+    <Compile Include="ViewModel\TaskMenuItemVM.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Page Include="ServantMainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
