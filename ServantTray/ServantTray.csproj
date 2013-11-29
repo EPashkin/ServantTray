@@ -65,8 +65,14 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Commands\CommandExecutionManager.cs" />
+    <Compile Include="Commands\DataContextCommandAdapter.cs" />
+    <Compile Include="Commands\DataContextCommandBinding.cs" />
+    <Compile Include="Commands\RoutedCommandBinding.cs" />
+    <Compile Include="Commands\RoutedCommandMonitor.cs" />
     <Compile Include="CustomCommands.cs" />
     <Compile Include="OTP_worker.cs" />
+    <Compile Include="ServantMainVM.cs" />
     <Compile Include="ServantMainWindow.xaml.cs">
       <DependentUpon>ServantMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
