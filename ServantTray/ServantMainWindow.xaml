@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:ServantTray"
-        xmlns:cmd="clr-namespace:WPFUtil.Commands"
         xmlns:tb="http://www.hardcodet.net/taskbar"
+        DataContext="{Binding Source={StaticResource Locator}, Path=ServantMain}"
         Title="Servant" Height="350" Width="525">
     <Grid>
         <tb:TaskbarIcon
@@ -12,10 +12,6 @@
             ToolTipText="Servant">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
-                    <ContextMenu.CommandBindings>
-                        <cmd:DataContextCommandBinding Command="local:CustomCommands.Exit"
-                            Executed="OnExit" CanExecute="ExitCanExecute" />
-                    </ContextMenu.CommandBindings>
                     <MenuItem Header="First Menu Item" />
                     <MenuItem Header="Second Menu Item" />
                     <Separator/>

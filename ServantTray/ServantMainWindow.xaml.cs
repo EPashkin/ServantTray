@@ -11,9 +11,6 @@ namespace ServantTray
 
         public MainWindow()
         {
-            var vm = new ServantMainVM();
-            this.DataContext = vm;
-
             InitializeComponent();
 
             //hide Main Window
