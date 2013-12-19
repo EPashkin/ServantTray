@@ -16,7 +16,7 @@ namespace ServantTray
             //hide Main Window
             this.Visibility = System.Windows.Visibility.Hidden;
 
-            string target = "ketchup";
+            string target = Properties.Settings.Default.serverNode;
             OTP = new OTP_worker(target);
         }
     }
