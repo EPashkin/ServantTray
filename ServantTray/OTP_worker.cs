@@ -42,11 +42,11 @@ namespace ServantTray
                 Thread.Sleep(100);
         }
 
-        public void GetList()
+        public void GetList(Action<String, Object> handler)
         {
             lock (_commands_lock)
             {
-                _commands.Enqueue(new OTPWorkerCommand { type = OTPWorkerCommandType.GETLIST });
+                _commands.Enqueue(new OTPWorkerCommand { type = OTPWorkerCommandType.GETLIST, param = handler });
             }
         }
 
@@ -112,7 +112,7 @@ namespace ServantTray
                             Stopping = true;
                             break;
                         case OTPWorkerCommandType.GETLIST:
-                            GetList(mbox);
+                            GetList(mbox, (Action<String, Object>)cmd.param);
                             break;
                         default:
                             System.Console.Out.WriteLine("Unknown command: " + cmd.type.ToString() + "(" + cmd.param.ToString() + ")" + "\n");
@@ -128,18 +128,29 @@ namespace ServantTray
             node.close();
         }
 
-        private void GetList(OtpMbox mbox)
+        private void GetList(OtpMbox mbox, Action<String, Object> handler)
         {
             Otp.Erlang.Object reply = mbox.rpcCall(
                 remote, "servant_tasklist", "getForMenu",
                 new Otp.Erlang.List());
 
             Erlang.Object okPat = Erlang.Object.Format("{ok, List}");
+            Erlang.Object itemPat = Erlang.Object.Format("{Text,Code}");
             Erlang.VarBind binding;
             if (okPat.match(reply, (binding = new Otp.Erlang.VarBind())))
             {
-                var list = binding.find("List") as Erlang.List;
-                WriteLine("getList: {0}", list.ToString());
+                Erlang.List list = binding.find("List") as Erlang.List;
+
+                foreach (Erlang.Object item in list)
+                {
+                    if (itemPat.match(item, (binding = new Otp.Erlang.VarBind())))
+                    {
+                        Erlang.Object text = binding.find("Text");
+                        string textStr = text.stringValue();
+                        Erlang.Object code = binding.find("Code");
+                        handler(textStr, code);
+                    }
+                }
             }
             else
             {

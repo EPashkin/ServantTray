@@ -37,7 +37,7 @@
                                          Value="TaskMenuItemVM">
                                     <Setter Property="Header" Value="{Binding Title}" />
                                     <Setter Property="Command" Value="{Binding DataContext.TaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}, AncestorLevel=1}}"/>
-                                    <Setter Property="CommandParameter" Value="{Binding Title}"/>
+                                    <Setter Property="CommandParameter" Value="{Binding}"/>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding}" Value="{x:Null}">
                                     <Setter Property="Template" Value="{StaticResource MenuSeparatorTemplate}" />

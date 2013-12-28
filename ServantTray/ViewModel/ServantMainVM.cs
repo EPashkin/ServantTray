@@ -1,6 +1,8 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 
@@ -21,6 +23,7 @@ namespace ServantTray.ViewModel
     public class ServantMainVM : ViewModelBase
     {
         private OTP_worker OTP;
+        private readonly Dispatcher _dispatcher;
 
         /// <summary>
         /// Initializes a new instance of the MainViewModel class.
@@ -35,17 +38,15 @@ namespace ServantTray.ViewModel
             ////{
             ////    // Code runs "for real"
             ////}
+            _dispatcher = Dispatcher.CurrentDispatcher;
+
             string target = Properties.Settings.Default.serverNode;
             string cookie = Properties.Settings.Default.serverCookie;
             OTP = new OTP_worker(target, cookie);
+            OnRefreshList(null);
 
-            var aa = new string[] { "Test1", "Test2" };
             TaskMenu.Add(null); //adding separator
-            foreach (string text in aa)
-            {
-                TaskMenu.Add(new TaskMenuItemVM(text));
-            }
-            TaskMenu.Add(null); //adding separator
+            TaskMenu.Add(null); //adding separator before exit
         }
 
         public string ExitTitle
@@ -79,7 +80,7 @@ namespace ServantTray.ViewModel
 
         private void OnRefreshList(object parameter)
         {
-            OTP.GetList();
+            OTP.GetList(OnAddTaskMenuItem);
         }
 
         private ObservableCollection<TaskMenuItemVM> m_TaskMenu;
@@ -102,7 +103,23 @@ namespace ServantTray.ViewModel
 
         private void OnTask(object parameter)
         {
-            MessageBox.Show(parameter.ToString());
+            TaskMenuItemVM menuItem = parameter as TaskMenuItemVM;
+            if (menuItem == null)
+                return;
+            string msg = string.Format("{0}{1}{2}", menuItem.Title, Environment.NewLine, menuItem.Code);
+            MessageBox.Show(msg);
+        }
+
+        private void OnAddTaskMenuItem(string text, object code)
+        {
+            _dispatcher.Invoke(() => AddTaskMenuItem(text, code));
+        }
+
+        private void AddTaskMenuItem(string text, object code)
+        {
+            //last item - separator before Exit
+            int count = TaskMenu.Count;
+            TaskMenu.Insert(count - 1, new TaskMenuItemVM(text, code));
         }
     }
 }
