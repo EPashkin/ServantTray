@@ -18,9 +18,9 @@ namespace ServantTray
         public bool Working { get; private set; }
         public bool Stopping { get; private set; }
 
-        public OTP_worker(string target)
+        public OTP_worker(string target, string _cookie)
         {
-            cookie = OtpNode.defaultCookie;
+            cookie = _cookie ?? OtpNode.defaultCookie;
             string host = System.Net.Dns.GetHostName();
             remote = (target.IndexOf('@') < 0) ? target + "@" + host : target;
             nodename = Environment.UserName + "123@" + host;

@@ -31,5 +31,14 @@ namespace ServantTray.Properties {
                 return ((string)(this["serverNode"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string serverCookie {
+            get {
+                return ((string)(this["serverCookie"]));
+            }
+        }
     }
 }

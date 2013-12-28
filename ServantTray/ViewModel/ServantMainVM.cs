@@ -20,6 +20,8 @@ namespace ServantTray.ViewModel
     /// </summary>
     public class ServantMainVM : ViewModelBase
     {
+        private OTP_worker OTP;
+
         /// <summary>
         /// Initializes a new instance of the MainViewModel class.
         /// </summary>
@@ -33,6 +35,10 @@ namespace ServantTray.ViewModel
             ////{
             ////    // Code runs "for real"
             ////}
+            string target = Properties.Settings.Default.serverNode;
+            string cookie = Properties.Settings.Default.serverCookie;
+            OTP = new OTP_worker(target, cookie);
+
             var aa = new string[] { "Test1", "Test2" };
             TaskMenu.Add(null); //adding separator
             foreach (string text in aa)
