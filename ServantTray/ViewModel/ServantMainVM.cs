@@ -104,8 +104,7 @@ namespace ServantTray.ViewModel
             TaskMenuItemVM menuItem = parameter as TaskMenuItemVM;
             if (menuItem == null)
                 return;
-            string msg = string.Format("{0}{1}{2}", menuItem.Title, Environment.NewLine, menuItem.Code);
-            MessageBox.Show(msg);
+            OTP.MenuItemClicked(menuItem.Code);
         }
 
         private void OnGetList(IEnumerable<Tuple<String, object>> list)

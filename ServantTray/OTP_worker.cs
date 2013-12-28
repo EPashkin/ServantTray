@@ -48,6 +48,14 @@ namespace ServantTray
             }
         }
 
+        public void MenuItemClicked(object code)
+        {
+            lock (_commands_lock)
+            {
+                _commands.Enqueue(new OTPWorkerCommand { type = OTPWorkerCommandType.CLICKED, param = code });
+            }
+        }
+
         private void Process()
         {
             try
@@ -112,8 +120,11 @@ namespace ServantTray
                         case OTPWorkerCommandType.GETLIST:
                             GetList(mbox, (Action<IEnumerable<Tuple<String, object>>>)cmd.param);
                             break;
+                        case OTPWorkerCommandType.CLICKED:
+                            SendDo(mbox, (Erlang.Object)cmd.param);
+                            break;
                         default:
-                            System.Console.Out.WriteLine("Unknown command: " + cmd.type.ToString() + "(" + cmd.param.ToString() + ")" + "\n");
+                            WriteLine("Unknown command: {0} {1}", cmd.type, cmd.param);
                             break;
                     }
                 }
@@ -162,6 +173,14 @@ namespace ServantTray
             }
         }
 
+        private void SendDo(OtpMbox mbox, Erlang.Object code)
+        {
+            Otp.Erlang.Object reply = mbox.rpcCall(
+                remote, "servant_tasklist", "doFromMenu",
+                new Otp.Erlang.List(code));
+            WriteLine("Do reply: {0}", reply);
+        }
+
         private void EndWork(bool ok)
         {
             Working = false;
@@ -189,6 +208,7 @@ namespace ServantTray
         NO_COMMAND = 0,
         STOP,
         GETLIST,
+        CLICKED,
     }
 
     internal struct OTPWorkerCommand
