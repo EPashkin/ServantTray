@@ -64,7 +64,22 @@ namespace ServantTray.ViewModel
 
         private void OnExit(object parameter)
         {
+            OTP.Stop();
             Application.Current.Shutdown();
+        }
+
+        private ICommand m_RefreshListCommand;
+        public ICommand RefreshListCommand
+        {
+            get
+            {
+                return m_RefreshListCommand ?? (m_RefreshListCommand = new RelayCommand<object>(OnRefreshList));
+            }
+        }
+
+        private void OnRefreshList(object parameter)
+        {
+            OTP.GetList();
         }
 
         private ObservableCollection<TaskMenuItemVM> m_TaskMenu;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Otp;
 using Erlang = Otp.Erlang;
@@ -17,13 +18,15 @@ namespace ServantTray
         private string nodename;
         public bool Working { get; private set; }
         public bool Stopping { get; private set; }
+        private Queue<OTPWorkerCommand> _commands = new Queue<OTPWorkerCommand>();
+        private readonly Object _commands_lock = new Object();
 
         public OTP_worker(string target, string _cookie)
         {
             cookie = _cookie ?? OtpNode.defaultCookie;
             string host = System.Net.Dns.GetHostName();
             remote = (target.IndexOf('@') < 0) ? target + "@" + host : target;
-            nodename = Environment.UserName + "123@" + host;
+            nodename = Environment.UserName + "_servant_tray@" + host;
             AbstractConnection.traceLevel = OtpTrace.Type.defaultLevel;
             Working = false;
             new Task(Process).Start();
@@ -31,7 +34,20 @@ namespace ServantTray
 
         public void Stop()
         {
-            Stopping = true;
+            lock (_commands_lock)
+            {
+                _commands.Enqueue(new OTPWorkerCommand { type = OTPWorkerCommandType.STOP });
+            }
+            while (Working)
+                Thread.Sleep(100);
+        }
+
+        public void GetList()
+        {
+            lock (_commands_lock)
+            {
+                _commands.Enqueue(new OTPWorkerCommand { type = OTPWorkerCommandType.GETLIST });
+            }
         }
 
         private void Process()
@@ -40,6 +56,7 @@ namespace ServantTray
             {
                 Working = true;
                 ProcessInternal();
+                EndWork(true);
             }
             catch (Exception ex)
             {
@@ -74,50 +91,33 @@ namespace ServantTray
             {
                 mbox = node.createMbox();
 
-                //Registering on target node for global name "servantTray"
-                {
-                    Otp.Erlang.Object reply = mbox.rpcCall(
-                        remote, "global", "register_name",
-                        new Otp.Erlang.List(new Otp.Erlang.Atom("servantTray"), mbox.self()));
-
-                    //WriteLine("<= [REPLY2]:" + (reply == null ? "null" : reply.ToString()));
-                    if (reply.ToString() != "yes")
-                        throw new Exception("Can't register name 'servantTray'");
-                }
-
-                {
-                    Otp.Erlang.Object reply = mbox.rpcCall(
-                        remote, "io", "format",
-                        new Otp.Erlang.List(
-@"servantTray process connected: ~w -> ~w
-Echo message: global:send(servantTray, {self(),message}).
-Stop servantTray: global:send(servantTray, stop).
-",
-                            new Otp.Erlang.List(mbox.self(), new Otp.Erlang.Atom("ok"))
-                        ));
-
-                    //WriteLine("<= [REPLY3]:" + (reply == null ? "null" : reply.ToString()));
-                }
-
-                Erlang.Object tupplePat = Erlang.Object.Format("{Pid, Mes}");
-                Erlang.Object stopPat = Erlang.Object.Format("stop");
-                Erlang.VarBind binding;
                 while (!Stopping)
                 {
-                    Otp.Erlang.Object msg = mbox.receive();
-                    if (tupplePat.match(msg, (binding = new Otp.Erlang.VarBind())))
+                    if (_commands.Count == 0)
                     {
-                        var Pid = binding.find("Pid") as Erlang.Pid;
-                        if (Pid != null)
-                        {
-                            mbox.send(Pid, binding.find("Mes"));
-                        }
+                        Thread.Sleep(100);
+                        continue;
                     }
-                    else if (stopPat.match(msg, (binding = new Otp.Erlang.VarBind())))
+
+                    OTPWorkerCommand cmd = new OTPWorkerCommand { type = OTPWorkerCommandType.NO_COMMAND, param = null };
+                    lock (_commands_lock)
                     {
-                        Stop();
+                        if (_commands.Count < 0)
+                            continue;
+                        cmd = _commands.Dequeue();
                     }
-                    System.Console.Out.WriteLine("IN msg: " + msg.ToString() + "\n");
+                    switch (cmd.type)
+                    {
+                        case OTPWorkerCommandType.STOP:
+                            Stopping = true;
+                            break;
+                        case OTPWorkerCommandType.GETLIST:
+                            GetList(mbox);
+                            break;
+                        default:
+                            System.Console.Out.WriteLine("Unknown command: " + cmd.type.ToString() + "(" + cmd.param.ToString() + ")" + "\n");
+                            break;
+                    }
                 }
 
             }
@@ -128,9 +128,28 @@ Stop servantTray: global:send(servantTray, stop).
             node.close();
         }
 
+        private void GetList(OtpMbox mbox)
+        {
+            Otp.Erlang.Object reply = mbox.rpcCall(
+                remote, "servant_tasklist", "getForMenu",
+                new Otp.Erlang.List());
+
+            Erlang.Object okPat = Erlang.Object.Format("{ok, List}");
+            Erlang.VarBind binding;
+            if (okPat.match(reply, (binding = new Otp.Erlang.VarBind())))
+            {
+                var list = binding.find("List") as Erlang.List;
+                WriteLine("getList: {0}", list.ToString());
+            }
+            else
+            {
+                WriteLine("Bad reply on getList {0}", reply.ToString());
+            }
+        }
+
         private void EndWork(bool ok)
         {
-            Working = true;
+            Working = false;
         }
 
         private static void WriteLine(string format, params object[] args)
@@ -148,5 +167,18 @@ Stop servantTray: global:send(servantTray, stop).
                 (op == AbstractConnection.Operation.Read ? "Read " : "Written "),
                 lastBytes, totalBytes, totalMsgs);
         }
+    }
+
+    internal enum OTPWorkerCommandType
+    {
+        NO_COMMAND = 0,
+        STOP,
+        GETLIST,
+    }
+
+    internal struct OTPWorkerCommand
+    {
+        public OTPWorkerCommandType type;
+        public Object param;
     }
 }

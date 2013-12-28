@@ -19,7 +19,7 @@
                     <ContextMenu.ItemsSource>
                         <CompositeCollection>
                             <MenuItem Header="First Menu Item" />
-                            <MenuItem Header="Second Menu Item" />
+                            <MenuItem Header="Refresh List" Command="{Binding RefreshListCommand}"/>
                             <CollectionContainer Collection="{Binding Mode=OneWay, Source={StaticResource Task_Menu}}" />
                             <MenuItem Header="{Binding ExitTitle}" Command="{Binding ExitCommand}" />
                         </CompositeCollection>
