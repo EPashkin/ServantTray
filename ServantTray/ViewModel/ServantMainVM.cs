@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
@@ -44,9 +45,6 @@ namespace ServantTray.ViewModel
             string cookie = Properties.Settings.Default.serverCookie;
             OTP = new OTP_worker(target, cookie);
             OnRefreshList(null);
-
-            TaskMenu.Add(null); //adding separator
-            TaskMenu.Add(null); //adding separator before exit
         }
 
         public string ExitTitle
@@ -80,7 +78,7 @@ namespace ServantTray.ViewModel
 
         private void OnRefreshList(object parameter)
         {
-            OTP.GetList(OnAddTaskMenuItem);
+            OTP.GetList(OnGetList);
         }
 
         private ObservableCollection<TaskMenuItemVM> m_TaskMenu;
@@ -110,16 +108,27 @@ namespace ServantTray.ViewModel
             MessageBox.Show(msg);
         }
 
-        private void OnAddTaskMenuItem(string text, object code)
+        private void OnGetList(IEnumerable<Tuple<String, object>> list)
         {
-            _dispatcher.Invoke(() => AddTaskMenuItem(text, code));
+            _dispatcher.Invoke(() => FillTaskMenu(list));
         }
 
-        private void AddTaskMenuItem(string text, object code)
+        private IEnumerable<TaskMenuItemVM> TranslateToTaskMenu(IEnumerable<Tuple<String, object>> list)
         {
-            //last item - separator before Exit
-            int count = TaskMenu.Count;
-            TaskMenu.Insert(count - 1, new TaskMenuItemVM(text, code));
+            yield return null;
+            foreach (var item in list)
+            {
+                yield return new TaskMenuItemVM(item.Item1, item.Item2);
+            }
+            yield return null;
+        }
+
+        private void FillTaskMenu(IEnumerable<Tuple<String, object>> list)
+        {
+            //bad way to use ObservableCollection
+            //todo: make normal change without separator change position
+            m_TaskMenu = new ObservableCollection<TaskMenuItemVM>(TranslateToTaskMenu(list));
+            this.RaisePropertyChanged("TaskMenu");
         }
     }
 }

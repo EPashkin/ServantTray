@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Otp;
@@ -42,7 +40,7 @@ namespace ServantTray
                 Thread.Sleep(100);
         }
 
-        public void GetList(Action<String, Object> handler)
+        public void GetList(Action<IEnumerable<Tuple<String, object>>> handler)
         {
             lock (_commands_lock)
             {
@@ -112,7 +110,7 @@ namespace ServantTray
                             Stopping = true;
                             break;
                         case OTPWorkerCommandType.GETLIST:
-                            GetList(mbox, (Action<String, Object>)cmd.param);
+                            GetList(mbox, (Action<IEnumerable<Tuple<String, object>>>)cmd.param);
                             break;
                         default:
                             System.Console.Out.WriteLine("Unknown command: " + cmd.type.ToString() + "(" + cmd.param.ToString() + ")" + "\n");
@@ -128,7 +126,7 @@ namespace ServantTray
             node.close();
         }
 
-        private void GetList(OtpMbox mbox, Action<String, Object> handler)
+        private void GetList(OtpMbox mbox, Action<IEnumerable<Tuple<String, object>>> handler)
         {
             Otp.Erlang.Object reply = mbox.rpcCall(
                 remote, "servant_tasklist", "getForMenu",
@@ -140,21 +138,27 @@ namespace ServantTray
             if (okPat.match(reply, (binding = new Otp.Erlang.VarBind())))
             {
                 Erlang.List list = binding.find("List") as Erlang.List;
-
-                foreach (Erlang.Object item in list)
-                {
-                    if (itemPat.match(item, (binding = new Otp.Erlang.VarBind())))
-                    {
-                        Erlang.Object text = binding.find("Text");
-                        string textStr = text.stringValue();
-                        Erlang.Object code = binding.find("Code");
-                        handler(textStr, code);
-                    }
-                }
+                handler(ListToMenuItems(list));
             }
             else
             {
                 WriteLine("Bad reply on getList {0}", reply.ToString());
+            }
+        }
+
+        private IEnumerable<Tuple<String, object>> ListToMenuItems(Erlang.List list)
+        {
+            Erlang.Object itemPat = Erlang.Object.Format("{Text,Code}");
+            Erlang.VarBind binding;
+            foreach (Erlang.Object item in list)
+            {
+                if (itemPat.match(item, (binding = new Otp.Erlang.VarBind())))
+                {
+                    Erlang.Object text = binding.find("Text");
+                    string textStr = text.stringValue();
+                    Erlang.Object code = binding.find("Code");
+                    yield return new Tuple<String, object>(textStr, code);
+                }
             }
         }
 
