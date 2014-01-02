@@ -140,7 +140,7 @@ namespace ServantTray
         private void GetList(OtpMbox mbox, Action<IEnumerable<Tuple<String, object>>> handler)
         {
             Otp.Erlang.Object reply = mbox.rpcCall(
-                remote, "servant_tasklist", "getForMenu",
+                remote, "servant", "get_confirmations",
                 new Otp.Erlang.List());
 
             Erlang.Object okPat = Erlang.Object.Format("{ok, List}");
@@ -176,7 +176,7 @@ namespace ServantTray
         private void SendDo(OtpMbox mbox, Erlang.Object code)
         {
             Otp.Erlang.Object reply = mbox.rpcCall(
-                remote, "servant_tasklist", "doFromMenu",
+                remote, "servant", "process_confirmation",
                 new Otp.Erlang.List(code));
             WriteLine("Do reply: {0}", reply);
         }
