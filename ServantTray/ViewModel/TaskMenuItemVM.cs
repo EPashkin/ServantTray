@@ -9,7 +9,7 @@ namespace ServantTray.ViewModel
 
         public TaskMenuItemVM(string text, object code)
         {
-            m_text = text;
+            m_text = text.Replace("_", "__");
             m_code = code;
         }
 
