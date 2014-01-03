@@ -104,6 +104,7 @@ namespace ServantTray.ViewModel
             TaskMenuItemVM menuItem = parameter as TaskMenuItemVM;
             if (menuItem == null)
                 return;
+            TaskMenu.Remove(menuItem);
             OTP.MenuItemClicked(menuItem.Code);
         }
 
