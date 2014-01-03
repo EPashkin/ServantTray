@@ -25,6 +25,7 @@ namespace ServantTray.ViewModel
     {
         private OTP_worker OTP;
         private readonly Dispatcher _dispatcher;
+        private readonly DispatcherTimer m_timer;
 
         /// <summary>
         /// Initializes a new instance of the MainViewModel class.
@@ -44,7 +45,11 @@ namespace ServantTray.ViewModel
             string target = Properties.Settings.Default.serverNode;
             string cookie = Properties.Settings.Default.serverCookie;
             OTP = new OTP_worker(target, cookie);
-            OnRefreshList(null);
+
+            m_timer = new DispatcherTimer(TimeSpan.FromSeconds(10),
+                DispatcherPriority.Background,
+                (o, args) => OnRefreshList(null),
+                _dispatcher);
         }
 
         public string ExitTitle
