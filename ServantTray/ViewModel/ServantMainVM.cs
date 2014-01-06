@@ -24,6 +24,7 @@ namespace ServantTray.ViewModel
     public class ServantMainVM : ViewModelBase
     {
         private OTP_worker OTP;
+        private bool m_OTP_connected = false;
         private readonly Dispatcher _dispatcher;
         private readonly DispatcherTimer m_timer;
 
@@ -44,7 +45,7 @@ namespace ServantTray.ViewModel
 
             string target = Properties.Settings.Default.serverNode;
             string cookie = Properties.Settings.Default.serverCookie;
-            OTP = new OTP_worker(target, cookie);
+            OTP = new OTP_worker(target, cookie, OnConnectedChanged);
 
             m_timer = new DispatcherTimer(TimeSpan.FromSeconds(10),
                 DispatcherPriority.Background,
@@ -134,6 +135,23 @@ namespace ServantTray.ViewModel
             //todo: make normal change without separator change position
             m_TaskMenu = new ObservableCollection<TaskMenuItemVM>(TranslateToTaskMenu(list));
             this.RaisePropertyChanged("TaskMenu");
+        }
+
+        public string ConnectedTitle
+        {
+            get
+            {
+                return m_OTP_connected ? "Connected" : "Not connected";
+            }
+        }
+
+        private void OnConnectedChanged(bool connected)
+        {
+            if (m_OTP_connected != connected)
+            {
+                m_OTP_connected = connected;
+                this.RaisePropertyChanged("ConnectedTitle");
+            }
         }
     }
 }

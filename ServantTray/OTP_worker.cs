@@ -20,9 +20,11 @@ namespace ServantTray
         public bool Stopping { get; private set; }
         private Queue<OTPWorkerCommand> _commands = new Queue<OTPWorkerCommand>();
         private readonly Object _commands_lock = new Object();
+        private readonly Action<bool> m_connect_status_handler;
 
-        public OTP_worker(string target, string _cookie)
+        public OTP_worker(string target, string _cookie, Action<bool> connect_status_handler)
         {
+            m_connect_status_handler = connect_status_handler;
             cookie = _cookie ?? OtpNode.defaultCookie;
             string host = System.Net.Dns.GetHostName();
             remote = (target.IndexOf('@') < 0) ? target + "@" + host : target;
@@ -90,7 +92,7 @@ namespace ServantTray
 
                     if (conn == null)
                     {
-                        //todo: show disconnected
+                        fireChanged(false);
                         Thread.Sleep(RECONNECT_DELAY);
                         continue;
                     }
@@ -103,6 +105,7 @@ namespace ServantTray
                         // get the short name of the peer.
                         remote = conn.peer.node();
                         WriteLine("   successfully connected to node " + remote + "\n");
+                        fireChanged(true);
                     }
                     if (_commands.Count == 0)
                     {
@@ -202,6 +205,12 @@ namespace ServantTray
             WriteLine("{0} {1} bytes (total: {2} bytes, {3} msgs)",
                 (op == AbstractConnection.Operation.Read ? "Read " : "Written "),
                 lastBytes, totalBytes, totalMsgs);
+        }
+
+        private void fireChanged(bool connected)
+        {
+            if (m_connect_status_handler != null)
+                m_connect_status_handler(connected);
         }
     }
 
