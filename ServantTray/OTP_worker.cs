@@ -32,10 +32,7 @@ namespace ServantTray
 
         public void Stop()
         {
-            lock (_commands_lock)
-            {
-                _commands.Enqueue(new OTPWorkerCommand { type = OTPWorkerCommandType.STOP });
-            }
+            Stopping = true;
             while (Working)
                 Thread.Sleep(100);
         }
@@ -77,28 +74,36 @@ namespace ServantTray
             WriteLine("This node is called {0} and is using cookie='{1}'.",
                 node.node(), node.cookie());
 
+            OtpMbox mbox = node.createMbox();
             OtpCookedConnection.ConnectTimeout = 2000;
-            OtpCookedConnection conn = node.connection(remote);
 
-            if (conn == null)
-                throw new Exception("Can't connect to node " + remote);
-
-            conn.OnReadWrite += OnReadWrite;
-
-            // If using short names or IP address as the host part of the node name,
-            // get the short name of the peer.
-            remote = conn.peer.node();
-
-            WriteLine("   successfully connected to node " + remote + "\n");
-
-            OtpMbox mbox = null;
+            bool connected = false;
 
             try
             {
-                mbox = node.createMbox();
-
                 while (!Stopping)
                 {
+                    OtpCookedConnection conn = node.connection(remote);
+
+                    if (conn == null)
+                    {
+                        //todo: show disconnected
+                        connected = false;
+                        Thread.Sleep(10000);
+                        continue;
+                    }
+
+                    if (!connected)
+                    {
+
+                        conn.OnReadWrite += OnReadWrite;
+
+                        // If using short names or IP address as the host part of the node name,
+                        // get the short name of the peer.
+                        remote = conn.peer.node();
+                        WriteLine("   successfully connected to node " + remote + "\n");
+                        connected = true;
+                    }
                     if (_commands.Count == 0)
                     {
                         Thread.Sleep(100);
@@ -114,9 +119,6 @@ namespace ServantTray
                     }
                     switch (cmd.type)
                     {
-                        case OTPWorkerCommandType.STOP:
-                            Stopping = true;
-                            break;
                         case OTPWorkerCommandType.GETLIST:
                             GetList(mbox, (Action<IEnumerable<Tuple<String, object>>>)cmd.param);
                             break;
@@ -206,7 +208,6 @@ namespace ServantTray
     internal enum OTPWorkerCommandType
     {
         NO_COMMAND = 0,
-        STOP,
         GETLIST,
         CLICKED,
     }
