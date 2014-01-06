@@ -132,25 +132,16 @@ namespace ServantTray.ViewModel
             _dispatcher.Invoke(() => FillTaskMenu(list));
         }
 
-        private IEnumerable<TaskMenuItemVM> TranslateToTaskMenu(IEnumerable<Tuple<String, object>> list)
-        {
-            yield return null;
-            foreach (var item in list)
-            {
-                yield return new TaskMenuItemVM(item.Item1, item.Item2);
-            }
-            yield return null;
-        }
-
         private void FillTaskMenu(IEnumerable<Tuple<String, object>> list)
         {
-            //bad way to use ObservableCollection
-            //todo: make normal change without separator change position
-            m_TaskMenu = new ObservableCollection<TaskMenuItemVM>(TranslateToTaskMenu(list));
-            this.RaisePropertyChanged("TaskMenu");
+            TaskMenu.Clear();
+            foreach (var item in list)
+            {
+                TaskMenu.Add(new TaskMenuItemVM(item.Item1, item.Item2));
+            }
+
             if (Status != StatusTypes.Disconnected)
-                //2 from separators
-                Status = TaskMenu.Count > 2 ? StatusTypes.HasConfirmations : StatusTypes.Connected;
+                Status = TaskMenu.Count > 0 ? StatusTypes.HasConfirmations : StatusTypes.Connected;
         }
 
         public string ConnectedTitle
