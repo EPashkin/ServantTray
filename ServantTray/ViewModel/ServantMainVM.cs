@@ -24,7 +24,20 @@ namespace ServantTray.ViewModel
     public class ServantMainVM : ViewModelBase
     {
         private OTP_worker OTP;
-        private bool m_OTP_connected = false;
+        enum StatusTypes { Disconnected = 0, Connected, HasConfirmations }
+        private StatusTypes m_Status = 0;
+        private StatusTypes Status
+        {
+            get { return m_Status; }
+            set
+            {
+                if (m_Status == value)
+                    return;
+                m_Status = value;
+                this.RaisePropertyChanged("ConnectedTitle");
+                this.RaisePropertyChanged("TrayIconSource");
+            }
+        }
         private readonly Dispatcher _dispatcher;
         private readonly DispatcherTimer m_timer;
 
@@ -135,22 +148,37 @@ namespace ServantTray.ViewModel
             //todo: make normal change without separator change position
             m_TaskMenu = new ObservableCollection<TaskMenuItemVM>(TranslateToTaskMenu(list));
             this.RaisePropertyChanged("TaskMenu");
+            if (Status != StatusTypes.Disconnected)
+                //2 from separators
+                Status = TaskMenu.Count > 2 ? StatusTypes.HasConfirmations : StatusTypes.Connected;
         }
 
         public string ConnectedTitle
         {
             get
             {
-                return m_OTP_connected ? "Connected" : "Not connected";
+                return Status != StatusTypes.Disconnected ? "Connected" : "Not connected";
             }
         }
 
         private void OnConnectedChanged(bool connected)
         {
-            if (m_OTP_connected != connected)
+            Status = connected ? StatusTypes.Connected : StatusTypes.Disconnected;
+        }
+
+        public string TrayIconSource
+        {
+            get
             {
-                m_OTP_connected = connected;
-                this.RaisePropertyChanged("ConnectedTitle");
+                switch (Status)
+                {
+                    case StatusTypes.Connected:
+                        return "/Icons/Connected.ico";
+                    case StatusTypes.HasConfirmations:
+                        return "/Icons/Bulb.ico";
+                    default:
+                        return "/Icons/Disconnected.ico";
+                }
             }
         }
     }

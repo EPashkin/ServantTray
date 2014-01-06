@@ -12,7 +12,7 @@
     <Grid>
         <tb:TaskbarIcon
             x:Name="TaskIcon"
-            IconSource="/Icons/Bulb.ico"
+            IconSource="{Binding TrayIconSource}"
             ToolTipText="Servant">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
