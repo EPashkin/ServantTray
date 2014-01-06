@@ -9,6 +9,8 @@ namespace ServantTray
 {
     internal class OTP_worker
     {
+        const int RECONNECT_DELAY = 60000;  //in msec
+        const int CONNECT_TIMEOUT = 2000;
         static bool logReadWrite = false;
 
         private string remote;
@@ -75,34 +77,32 @@ namespace ServantTray
                 node.node(), node.cookie());
 
             OtpMbox mbox = node.createMbox();
-            OtpCookedConnection.ConnectTimeout = 2000;
-
-            bool connected = false;
+            OtpCookedConnection.ConnectTimeout = CONNECT_TIMEOUT;
+            OtpCookedConnection conn = null;
 
             try
             {
                 while (!Stopping)
                 {
-                    OtpCookedConnection conn = node.connection(remote);
+                    bool needReconnect = (conn == null || conn.isConnected() == false);
+                    if (needReconnect)
+                        conn = node.connection(remote);
 
                     if (conn == null)
                     {
                         //todo: show disconnected
-                        connected = false;
-                        Thread.Sleep(10000);
+                        Thread.Sleep(RECONNECT_DELAY);
                         continue;
                     }
 
-                    if (!connected)
+                    if (needReconnect)
                     {
-
                         conn.OnReadWrite += OnReadWrite;
 
                         // If using short names or IP address as the host part of the node name,
                         // get the short name of the peer.
                         remote = conn.peer.node();
                         WriteLine("   successfully connected to node " + remote + "\n");
-                        connected = true;
                     }
                     if (_commands.Count == 0)
                     {
