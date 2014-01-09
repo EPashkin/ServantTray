@@ -125,6 +125,7 @@ namespace ServantTray.ViewModel
                 return;
             TaskMenu.Remove(menuItem);
             OTP.MenuItemClicked(menuItem.Code);
+            UpdateStatus();
         }
 
         private void OnGetList(IEnumerable<Tuple<String, object>> list)
@@ -139,9 +140,7 @@ namespace ServantTray.ViewModel
             {
                 TaskMenu.Add(new TaskMenuItemVM(item.Item1, item.Item2));
             }
-
-            if (Status != StatusTypes.Disconnected)
-                Status = TaskMenu.Count > 0 ? StatusTypes.HasConfirmations : StatusTypes.Connected;
+            UpdateStatus();
         }
 
         public string ConnectedTitle
@@ -171,6 +170,12 @@ namespace ServantTray.ViewModel
                         return "/Icons/Disconnected.ico";
                 }
             }
+        }
+
+        private void UpdateStatus()
+        {
+            if (Status != StatusTypes.Disconnected)
+                Status = TaskMenu.Count > 0 ? StatusTypes.HasConfirmations : StatusTypes.Connected;
         }
     }
 }
